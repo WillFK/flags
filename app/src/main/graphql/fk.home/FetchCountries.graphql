@@ -1,0 +1,10 @@
+query FetchCountries {
+    Country {
+        name
+        alpha2Code
+        capital
+        flag {
+            svgFile
+        }
+    }
+}
