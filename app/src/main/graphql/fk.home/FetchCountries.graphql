@@ -5,6 +5,7 @@ query FetchCountries {
         capital
         flag {
             svgFile
+            emoji
         }
     }
 }
