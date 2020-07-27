@@ -3,6 +3,7 @@ package fk.home.flags
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.coroutines.toDeferred
 import fk.home.FetchCountriesQuery
+import fk.home.flags.ui.countries.CountriesResult
 import kotlinx.coroutines.*
 import java.lang.Exception
 import kotlin.coroutines.CoroutineContext
@@ -12,12 +13,12 @@ object TempClient: CoroutineScope  {
     override val coroutineContext: CoroutineContext =
         Dispatchers.Default + Job()
 
-    fun runStuff() : List<FetchCountriesQuery.Country> {
+    suspend fun runStuff() : CountriesResult {
         return runBlocking {
             val apolloClient: ApolloClient = getApolloClient()
             val query = FetchCountriesQuery()
             val response = apolloClient.query(query).toDeferred().await()
-            response.data!!.country!!.mapNotNull { it }
+            CountriesResult.Success(countries = response.data!!.country!!.mapNotNull { it })
         }
     }
 
