@@ -1,13 +1,15 @@
 package fk.home.flags.ui.countries
 
-import fk.home.flags.TempClient
+import fk.home.flags.data.CountriesRepository
 
 class CountriesProcessor {
 
-    val processor: suspend (CountriesAction) -> CountriesResult = { countriesAction ->
+    // TODO inject
+    private val repository by lazy { CountriesRepository() }
 
+    val processor: suspend (CountriesAction) -> CountriesResult = { countriesAction ->
         when (countriesAction) {
-            CountriesAction.Load -> TempClient.runStuff()
+            CountriesAction.Load -> repository.getCountries()
         }
     }
 }

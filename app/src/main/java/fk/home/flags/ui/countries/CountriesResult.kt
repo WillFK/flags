@@ -1,7 +1,6 @@
 package fk.home.flags.ui.countries
 
 import fk.home.FetchCountriesQuery
-import java.lang.Exception
 
 sealed class CountriesResult {
 

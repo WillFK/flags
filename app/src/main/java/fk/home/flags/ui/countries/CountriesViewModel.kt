@@ -3,11 +3,10 @@ package fk.home.flags.ui.countries
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fk.home.flags.TempClient
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.lang.Exception
+import timber.log.Timber
 
 class CountriesViewModel : ViewModel() {
 
@@ -25,8 +24,12 @@ class CountriesViewModel : ViewModel() {
     init {
         viewModelScope.launch {
             intentChannel.consumeAsFlow()
-                .map { it.toAction() }
-                .map(processor.processor)
+                .map {
+                    it.toAction()
+                }
+                .map {
+                    processor.processor(it)
+                }
                 .scan(CountriesState(loading = true), { state, result ->
                     reducer.reduce(state, result)
                 })
