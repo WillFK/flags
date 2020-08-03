@@ -8,11 +8,11 @@ import androidx.compose.Composable
 import androidx.compose.Recomposer
 import androidx.compose.remember
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Text
+import androidx.ui.foundation.clickable
 import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
@@ -20,13 +20,20 @@ import androidx.ui.layout.Column
 import androidx.ui.layout.Row
 import androidx.ui.layout.fillMaxWidth
 import androidx.ui.layout.padding
+import androidx.ui.livedata.observeAsState
 import androidx.ui.material.*
 import androidx.ui.unit.dp
 import fk.home.FetchCountriesQuery
 import fk.home.flags.R
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class CountriesListFragment : Fragment(), CoroutineScope by MainScope() {
+
+    private lateinit var viewModel: CountriesViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,48 +46,53 @@ class CountriesListFragment : Fragment(), CoroutineScope by MainScope() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         ViewModelProvider(this).get(CountriesViewModel::class.java).let { viewModel ->
-            viewModel.states.observe(this@CountriesListFragment.viewLifecycleOwner,
-                Observer<CountriesState> { state -> state?.let(::render) })
-
+            this.viewModel = viewModel
             launch {
-                //delay(2000)
                 viewModel.intentChannel.send(CountriesIntent.Load)
+            }
+            //TODO I think I can move this call to somewhere else
+            render()
+        }
+    }
+
+    private fun render() {
+        //TODO lots of stuff
+        (view as? ViewGroup)?.let {
+            it.setContent(Recomposer.current()) {
+                NewStory()
             }
         }
     }
 
-    private fun render(state: CountriesState) {
-        //TODO lots of stuff
-        (view as? ViewGroup)?.let {
-            if (state.data != null)
-                it.setContent(Recomposer.current()) {
-                    NewStory(state.data)
-                }
-        }
-    }
-
     @Composable
-    fun NewStory(countries: List<FetchCountriesQuery.Country>) {
+    fun NewStory() {
         MaterialTheme {
 
-            val scaffoldState = remember { ScaffoldState() }
+            viewModel.states.observeAsState().value?.let { state ->
 
-            Scaffold(
-                scaffoldState = scaffoldState,
-                topBar = {
-                    TopAppBar(title = {
-                        Text(text = "Countries")
-                    })
-                },
-                bodyContent = {
-                    LazyColumnItems(items = countries) {
-                        RenderCountry(country = it)
+                //To I really need this state? TODO
+                val scaffoldState = remember { ScaffoldState() }
+
+                Scaffold(
+                    scaffoldState = scaffoldState,
+                    topBar = {
+                        TopAppBar(title = {
+                            Text(text = "Countries")
+                        })
+                    },
+                    bodyContent = {
+                        state.data?.let { data ->
+                            LazyColumnItems(items = data) {
+                                RenderCountry(country = it)
+                            }
+                        }
+                    },
+                    bottomBar = {
+                        // Nothing yet
                     }
-                },
-                bottomBar = {
-                    // Nothing yet
-                }
-            )
+                )
+            }
+
         }
     }
 
@@ -89,20 +101,27 @@ class CountriesListFragment : Fragment(), CoroutineScope by MainScope() {
 
         Card(
             shape = RoundedCornerShape(4.dp),
-            modifier = Modifier.fillMaxWidth() + Modifier.padding(10.dp),
+            modifier = Modifier.fillMaxWidth() + Modifier.padding(10.dp) + Modifier.clickable(
+                onClick = { onCardClick(country) }
+            ),
             color = Color.LightGray
         ) {
-
             Row(modifier = Modifier.padding(10.dp)) {
-
                 Column {
-
                     Text(
                         text = "${country.flag!!.emoji} ${country.name} - ${country.alpha2Code}",
-                        style = MaterialTheme.typography.h6)
+                        style = MaterialTheme.typography.h6
+                    )
                     Text(text = country.capital)
                 }
             }
+        }
+    }
+
+    private fun onCardClick(country: FetchCountriesQuery.Country) {
+        Timber.tag("FKZ").d("click! ${country.name}")
+        launch {
+            viewModel.intentChannel.send(CountriesIntent.Search("br"))
         }
     }
 

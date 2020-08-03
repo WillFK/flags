@@ -7,9 +7,10 @@ class CountriesProcessor {
     // TODO inject
     private val repository by lazy { CountriesRepository() }
 
-    val processor: suspend (CountriesAction) -> CountriesResult = { countriesAction ->
-        when (countriesAction) {
+    val processor: suspend (CountriesAction) -> CountriesResult = { action ->
+        when (action) {
             CountriesAction.Load -> repository.getCountries()
+            is CountriesAction.Search -> repository.getCountries(action.term)
         }
     }
 }

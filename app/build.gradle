@@ -10,12 +10,12 @@ apply plugin: 'kotlin-android-extensions'
 
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "fk.home.flags"
         minSdkVersion 26
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -72,6 +72,7 @@ dependencies {
     implementation 'androidx.ui:ui-layout:0.1.0-dev14'
     implementation 'androidx.ui:ui-material:0.1.0-dev14'
     implementation 'androidx.ui:ui-foundation:0.1.0-dev14'
+    implementation 'androidx.ui:ui-livedata:0.1.0-dev14'
 
     //graphql
     implementation "com.apollographql.apollo:apollo-runtime:2.2.2"

@@ -6,16 +6,37 @@ import fk.home.flags.ui.countries.CountriesResult
 
 class CountriesRepository {
 
-    suspend fun getCountries(): CountriesResult {
+    private var cache: List<FetchCountriesQuery.Country>? = null
+
+    suspend fun getCountries(filter: String? = null): CountriesResult {
+
         return try {
-            ApolloHelper.client.query(FetchCountriesQuery()).toDeferred().await().let { response ->
-                response.errors?.let {
-                    throw ApolloError(it)
-                }
-                CountriesResult.Success(response.data!!.country!!.mapNotNull { it })
+            loadCountries().filterCountries(filter).let {
+                CountriesResult.Success(it)
             }
         } catch (error: Throwable) {
             CountriesResult.Error(error)
+        }
+    }
+
+    private fun List<FetchCountriesQuery.Country>.filterCountries(filter: String?): List<FetchCountriesQuery.Country> =
+        if (filter.isNullOrEmpty())
+            this
+        else
+            this.filter { it.name.contains(filter, ignoreCase = true) }
+
+    private suspend fun loadCountries(): List<FetchCountriesQuery.Country> {
+        return cache.let {
+            it
+                ?: ApolloHelper.client.query(FetchCountriesQuery()).toDeferred().await()
+                    .let { response ->
+                        response.errors?.let {
+                            throw ApolloError(it)
+                        }
+                        response.data!!.country!!.mapNotNull { it }.apply {
+                            cache = this
+                        }
+                    }
         }
     }
 }
