@@ -1,7 +1,7 @@
 package fk.home.flags.ui.countries
 
-import androidx.ui.input.TextFieldValue
 import fk.home.flags.data.CountriesRepository
+import fk.home.flags.data.CountriesResult
 import fk.home.flags.data.GetCountryResult
 
 class CountriesProcessor {

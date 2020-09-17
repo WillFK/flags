@@ -1,6 +1,5 @@
 package fk.home.flags.ui.countries
 
-import androidx.ui.input.TextFieldValue
 import fk.home.FetchCountriesQuery
 
 data class CountriesState(

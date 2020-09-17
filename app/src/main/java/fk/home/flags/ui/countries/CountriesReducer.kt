@@ -1,5 +1,7 @@
 package fk.home.flags.ui.countries
 
+import fk.home.flags.data.CountriesResult
+
 class CountriesReducer {
 
     val reduce: (CountriesState, CountriesResult) -> CountriesState = { oldState, result ->

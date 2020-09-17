@@ -170,8 +170,6 @@ class CountriesListFragment : Fragment(), CoroutineScope by MainScope() {
         }
     }
 
-    onpa
-
     private fun startSearch() {
         launch {
             viewModel.intentChannel.send(CountriesIntent.StartSearch)
