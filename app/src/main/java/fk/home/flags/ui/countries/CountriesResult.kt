@@ -1,10 +1,23 @@
 package fk.home.flags.ui.countries
 
+import androidx.ui.input.TextFieldValue
 import fk.home.FetchCountriesQuery
 
 sealed class CountriesResult {
 
-    data class Error(val error: Throwable) : CountriesResult()
+    sealed class Load : CountriesResult() {
 
-    data class Success(val countries: List<FetchCountriesQuery.Country>) : CountriesResult()
+        data class Fail(val error: Throwable) : Load()
+
+        data class Success(val countries: List<FetchCountriesQuery.Country>) : Load()
+    }
+
+    sealed class Search : CountriesResult() {
+
+        object Start : Search()
+
+        data class Finish(val countries: List<FetchCountriesQuery.Country>): Search()
+
+        //object Finish : CountriesResult()
+    }
 }

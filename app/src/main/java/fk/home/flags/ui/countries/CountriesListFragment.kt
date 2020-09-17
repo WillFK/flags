@@ -4,33 +4,35 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.Composable
-import androidx.compose.Recomposer
-import androidx.compose.remember
+import androidx.compose.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.ui.core.ContentScale
+import androidx.ui.core.DensityAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
+import androidx.ui.foundation.Image
 import androidx.ui.foundation.Text
+import androidx.ui.foundation.TextField
 import androidx.ui.foundation.clickable
+import androidx.ui.foundation.gestures.DragDirection
+import androidx.ui.foundation.gestures.draggable
 import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
-import androidx.ui.layout.Column
-import androidx.ui.layout.Row
-import androidx.ui.layout.fillMaxWidth
-import androidx.ui.layout.padding
+import androidx.ui.input.TextFieldValue
+import androidx.ui.layout.*
 import androidx.ui.livedata.observeAsState
 import androidx.ui.material.*
+import androidx.ui.res.vectorResource
+import androidx.ui.savedinstancestate.savedInstanceState
 import androidx.ui.unit.dp
 import fk.home.FetchCountriesQuery
 import fk.home.flags.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import timber.log.Timber
 
+@ExperimentalCoroutinesApi
 class CountriesListFragment : Fragment(), CoroutineScope by MainScope() {
 
     private lateinit var viewModel: CountriesViewModel
@@ -76,9 +78,7 @@ class CountriesListFragment : Fragment(), CoroutineScope by MainScope() {
                 Scaffold(
                     scaffoldState = scaffoldState,
                     topBar = {
-                        TopAppBar(title = {
-                            Text(text = "Countries")
-                        })
+                        TopBar(state = state)
                     },
                     bodyContent = {
                         state.data?.let { data ->
@@ -97,7 +97,59 @@ class CountriesListFragment : Fragment(), CoroutineScope by MainScope() {
     }
 
     @Composable
+    fun TopBar(state: CountriesState) {
+        if (state.searching) {
+
+            // TODO should this be part of uiModel? I tried to put it there but ended up with some glitches
+            val searchState = savedInstanceState(saver = TextFieldValue.Saver) { TextFieldValue() }
+
+            TopAppBar(
+                title = {
+                    TextField(
+                        value = searchState.value,
+                        onValueChange = {
+                            searchState.value = it
+                            performSearch(it.text)
+                        }
+                    )
+                },
+                actions = {
+                    Image(
+                        asset = vectorResource(id = R.drawable.ic_close_action),
+                        modifier = Modifier.width(24.dp) + Modifier.height(24.dp) + Modifier.clickable(
+                            onClick = {
+                                searchState.value = TextFieldValue()
+                                finishSearch()
+                            }
+                        ),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+            )
+        } else {
+            TopAppBar(
+                title = { Text(text = "Countries") },
+                actions = {
+                    Image(
+                        asset = vectorResource(id = R.drawable.ic_search_action),
+                        modifier = Modifier.width(24.dp) + Modifier.height(24.dp) + Modifier.clickable(
+                            onClick = { startSearch() }
+                        ),
+                        contentScale = ContentScale.Fit
+                    )
+                }
+            )
+        }
+    }
+
+    @Composable
     fun RenderCountry(country: FetchCountriesQuery.Country) {
+
+        val max = 300.dp
+        val min = 0.dp
+        val (minPx, maxPx) = with(DensityAmbient.current) {
+            min.toPx() to max.toPx()
+        }
 
         Card(
             shape = RoundedCornerShape(4.dp),
@@ -118,11 +170,28 @@ class CountriesListFragment : Fragment(), CoroutineScope by MainScope() {
         }
     }
 
+    onpa
+
+    private fun startSearch() {
+        launch {
+            viewModel.intentChannel.send(CountriesIntent.StartSearch)
+        }
+    }
+
+    private fun performSearch(value: String) {
+        launch {
+            viewModel.intentChannel.send(CountriesIntent.Search(value))
+        }
+    }
+
+    private fun finishSearch() {
+        launch {
+            viewModel.intentChannel.send(CountriesIntent.FinishSearch)
+        }
+    }
+
     private fun onCardClick(country: FetchCountriesQuery.Country) {
         Timber.tag("FKZ").d("click! ${country.name}")
-        launch {
-            viewModel.intentChannel.send(CountriesIntent.Search("br"))
-        }
     }
 
     override fun onDestroy() {

@@ -4,5 +4,10 @@ sealed class CountriesAction {
 
     object Load : CountriesAction()
 
-    data class Search(val term: String): CountriesAction()
+    //TODO sealed class
+    object StartSearch : CountriesAction()
+
+    data class Search(val value: String): CountriesAction()
+
+    object FinishSearch : CountriesAction()
 }

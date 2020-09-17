@@ -2,20 +2,19 @@ package fk.home.flags.data
 
 import com.apollographql.apollo.coroutines.toDeferred
 import fk.home.FetchCountriesQuery
-import fk.home.flags.ui.countries.CountriesResult
 
 class CountriesRepository {
 
     private var cache: List<FetchCountriesQuery.Country>? = null
 
-    suspend fun getCountries(filter: String? = null): CountriesResult {
+    suspend fun getCountries(filter: String? = null): GetCountryResult {
 
         return try {
             loadCountries().filterCountries(filter).let {
-                CountriesResult.Success(it)
+                GetCountryResult.Success(it)
             }
         } catch (error: Throwable) {
-            CountriesResult.Error(error)
+            GetCountryResult.Fail(error)
         }
     }
 
@@ -39,5 +38,12 @@ class CountriesRepository {
                     }
         }
     }
+}
+
+sealed class GetCountryResult {
+
+    data class Success(val data: List<FetchCountriesQuery.Country>) : GetCountryResult()
+
+    data class Fail(val error: Throwable) : GetCountryResult()
 }
 

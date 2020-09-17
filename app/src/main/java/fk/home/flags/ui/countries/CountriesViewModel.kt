@@ -3,11 +3,13 @@ package fk.home.flags.ui.countries
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.ui.input.TextFieldValue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
+@ExperimentalCoroutinesApi
 class CountriesViewModel : ViewModel() {
 
     // TODO injection
@@ -30,7 +32,7 @@ class CountriesViewModel : ViewModel() {
                 .map {
                     processor.processor(it)
                 }
-                .scan(CountriesState(loading = true), { state, result ->
+                .scan(getInitialCountriesState(), { state, result ->
                     reducer.reduce(state, result)
                 })
                 .collect {
@@ -39,4 +41,12 @@ class CountriesViewModel : ViewModel() {
         }
         intentChannel.receiveAsFlow()
     }
+
+    private fun getInitialCountriesState() =
+        CountriesState(
+            loading = true,
+            searching = false,
+            error = null,
+            data = emptyList()
+        )
 }
